@@ -1,0 +1,20 @@
+#Fillna(-1/0) for regime de circulation 
+global_df['circ'] = global_df['circ'].fillna(-1)
+num_nan_circ = global_df['circ'].isnull().sum()
+print(num_nan_circ)
+
+
+#Replace 0 a -1 aussi sur regime de circulation 
+global_df['circ'] = global_df['circ'].replace(0, -1)
+#Now we graphs circ with grav
+contingency_table = pd.crosstab(global_df['grav'], global_df['circ'])
+contingency_table.plot(kind='bar', stacked=True, figsize=(10, 6))
+plt.xlabel('Severity of Accident (grav)')
+plt.ylabel('Frequency')
+plt.title('Frequency Distribution of Severity of Accident by Regime de circulation')
+plt.legend(title='Regime de circulation (circ)')
+plt.xticks(rotation=0)
+plt.show()
+plt.figure(figsize=(10, 6))
+sns.heatmap(contingency_table, annot=True, cmap='coolwarm', fmt='d', cbar=False)
+plt.xlabel('Regime de circulation (circ)')
