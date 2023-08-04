@@ -1,20 +1,147 @@
-#Fillna(-1/0) for regime de circulation 
+#Nombre occurence pour la variable 'catr'
+label = [
+    "1 – Autoroute",
+    "2 – Route nationale",
+    "3 – Route Départementale",
+    "4 – Voie Communales",
+    "5 – Hors réseau public",
+    "6 – Parc de stationnement ouvert à la circulation publique",
+    "7 – Routes de métropole urbaine",
+    "9 – Autre"
+    ]
+plt.figure(figsize=(10, 6))
+plt.hist(lieux['catr'], bins=range(1, 10), align='left', rwidth=0.8)
+# Ajouter les étiquettes aux barres
+plt.xticks(range(1, 9), label, rotation=45, ha='right')
+# Ajouter les labels des axes et le titre du graphique
+plt.xlabel('Catégorie de route')
+plt.ylabel('Nombre d\'occurrences')
+plt.title('Histogramme de la variable "catr"')
+# Afficher l'histogramme
+plt.tight_layout()
+plt.show()
+#Repeat for other graphs already in excel if needed
+
+
+#CATEGORIE DE ROUTE catr Vs GRAV
+Fillna pour les valeur manquante a non-renseigner for regime de circulation 'circ'
 global_df['circ'] = global_df['circ'].fillna(-1)
+#Checker si il y a mais normalement si correct non
 num_nan_circ = global_df['circ'].isnull().sum()
 print(num_nan_circ)
-
-
-#Replace 0 a -1 aussi sur regime de circulation 
+#Replace les valeurs 0 a -1 sur regime de circulation 'circ'
 global_df['circ'] = global_df['circ'].replace(0, -1)
-#Now we graphs circ with grav
+#Graphs 'circ' with 'grav'
 contingency_table = pd.crosstab(global_df['grav'], global_df['circ'])
 contingency_table.plot(kind='bar', stacked=True, figsize=(10, 6))
-plt.xlabel('Severity of Accident (grav)')
-plt.ylabel('Frequency')
-plt.title('Frequency Distribution of Severity of Accident by Regime de circulation')
+plt.xlabel('Gravité des Accidents (grav)')
+plt.ylabel('Frequence')
+plt.title('Frequence des Distributions de Gravité des Accidents pas Regime de circulation')
 plt.legend(title='Regime de circulation (circ)')
 plt.xticks(rotation=0)
 plt.show()
 plt.figure(figsize=(10, 6))
 sns.heatmap(contingency_table, annot=True, cmap='coolwarm', fmt='d', cbar=False)
 plt.xlabel('Regime de circulation (circ)')
+#Le graph montre que a chaque niveau de gravité, les accident sont plus frequente sur les route bidirectionnelle 
+#Mais des route bidirectionnelle sont plus frequente au quotidien
+
+#NOMBRE DE VOIE DE CIRCULATION Vs GRAV
+#Filtre les nombre aberrantes 
+#A decider jusqua quelle voie? - la jai mis 6 
+#filter to a maximum of 6 lanes
+global_df = global_df[global_df['nbv'] <= 6]
+#Replace 0 a -1 aussi sur nbv
+global_df['nbv'] = global_df['nbv'].replace(0, -1)
+#Graphs 'nbr' with 'grav'
+contingency_table = pd.crosstab(global_df['grav'], global_df['nbv'])
+contingency_table.plot(kind='bar', stacked=True, figsize=(10, 6))
+plt.xlabel('Severity of Accident (grav)')
+plt.ylabel('Frequency')
+plt.title('Frequency Distribution of Severity of Accident by Nombre de voie ')
+plt.legend(title=Nombre de voie  (nbv)')
+plt.xticks(rotation=0)
+plt.show()
+plt.figure(figsize=(10, 6))
+sns.heatmap(contingency_table, annot=True, cmap='coolwarm', fmt='d', cbar=False)
+plt.xlabel('Nombre de voie (nbv)')
+#Le graph montre que a chaque niveau de gravité, les accident sont plus frequente sur les route a deux voie
+#Mais des route a deux voie sont plus frequente au quotidien
+
+#Boxplot montre que les accident les plus grave sont entre 2 et 3 
+
+
+#SITUATION DE ROUTE
+#Replace les valeurs 0 a -1 sur regime de circulation 'situ'
+global_df['situ'] = global_df['situ'].replace(0, -1)
+#Graph
+contingency_table = pd.crosstab(global_df['grav'], global_df['situ'])
+contingency_table.plot(kind='bar', stacked=True, figsize=(10, 6))
+plt.xlabel('Severity of Accident (grav)')
+plt.ylabel('Frequency')
+plt.title('Frequency Distribution of Severity of Accident by Situation of Road')
+plt.legend(title='Situation of Road (situ)')
+plt.xticks(rotation=0)
+plt.show()
+#Les plus nombrer sont des accident sur chaussee sur cette niveau de gravite 
+#Les deux plus frequent sont sur accotement = lien avec voiture arreter sur bord de la route? 
+
+#Trace en plan 
+contingency_table = pd.crosstab(global_df['grav'], global_df[global_df['plan'].isin([-1, 1, 2, 3, 4 ])]['plan'])
+contingency_table.plot(kind='bar', stacked=True, figsize=(10, 6))
+plt.xlabel('Severity of Accident (grav')
+plt.ylabel('Frequency')
+plt.legend(title='Tracé en plan :(plan)')
+plt.title('Frequency Distribution Severity de Accident by Trace en plan :')
+plt.legend(title='Tracé en plan :(plan)')
+plt.xticks(rotation=0)
+plt.show()
+
+
+#BOXPLOT VMA + GRAV
+#Il faut deja filtre les abberante sur maximum speed authorise au maximum speed authorise en France = 110 pour voire plus claire
+global_df = global_df[global_df['vma'] <= 110]
+sns.boxplot(x='grav', y='vma', data=global_df)
+plt.xlabel('Severity of Accident (grav)')
+plt.ylabel('Maximale speed authorise')
+plt.title('Relationship between Severity of Accident and maximale speed')
+plt.show()
+#SCATTER
+plt.figure(figsize=(10, 6))
+sns.scatterplot(x='vma', y='grav', data=global_df)
+plt.xlabel('Speed maximum Authorizer au temps de accident(vma)')
+plt.ylabel('Severity of Accident (grav)')
+plt.title('Relationship between Severity of Accident and Maximum Authorized Speed')
+plt.show()
+#Le boxplot montre que la vitesse maximal authoriser ma pas influence sur la gravite de laccident mais bizarre
+# Le scatterplot montre que il y a plus accident entre 0 - 20 vma 
+
+
+#SURFACE DE LA ROUTE
+#boxplot
+sns.boxplot(x='grav', y='surf', data=global_df)
+plt.xlabel('Severity of Accident (grav)')
+plt.ylabel('Surface de la surface')
+plt.title('Relationship between Severity of Accident et etat de surface')
+plt.show()
+#SCATTER
+plt.figure(figsize=(10, 6))
+sns.scatterplot(x='grav', y='surf', data=global_df)
+plt.xlabel('Maximum Authorized Speed at the Time of Accident (vitesse_max)')
+plt.ylabel('Severity of Accident (grav)')
+plt.title('Relationship between Severity of Accident et etat de surface')
+plt.show()
+#Deuxieme apres surface normale dans gravite 4 est surface mouiller 
+
+
+#print('THE DATA MISSING DATAFRAME LIEUX')
+#calcul the percentage of missing values in our datasets
+per_missing_values =(lieux.isna().sum()) / (len(lieux))*100
+#lets remove the columns that has 0% (we don't need them in our bar chart)
+per_missing_values = per_missing_values[per_missing_values > 0 ]
+#sort the dataframe
+per_missing_values = per_missing_values.sort_values(ascending=False)
+per_missing_values.plot(kind='bar',title='the percentage of missing values in our dataset',color='blue')
+
+
+
