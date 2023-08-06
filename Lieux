@@ -80,7 +80,7 @@ plt.tight_layout()
 plt.show()
 
 #-----------------------------------
-
+Figure 3
 # Replace -1 with NaN to filter them out
 global_df['circ'].replace(-1, pd.NA, inplace=True)
 global_df['choc'].replace(-1, pd.NA, inplace=True)
@@ -123,10 +123,37 @@ plt.legend(title='Collision Point', loc='upper right', bbox_to_anchor=(1.25, 1))
 plt.xticks(rotation=45, ha='right')
 plt.tight_layout()
 plt.show()
-
-
 #-----------------------------------
+Figure 4.
+plt.figure(figsize=(10, 5))
+sns.countplot(x='grav', data=df_pedestrians)
+plt.xlabel("Gravité de l'accident")
+plt.ylabel("Nombre d'accidents")
+plt.xticks([0, 1, 2, 3], ['1_Indemne', '2_Tué', '3_Blessé_hospitalisé', '4_Blessé_léger'])
+plt.title("Relation entre les accidents de piétons et la gravité des blessures")
 
+plt.show()
+#-----------------------------------
+Figure 6. 
+
+# Filter the rows where 'vma' and 'grav' are not NaN
+df_filtered = df.dropna(subset=['vma', 'grav'])
+
+# Create bins for the "vma" variable
+vma_bins = [0, 30, 60, 90, 120, float('inf')]
+labels_vma = ['0-30', '30-60', '60-90', '90-120', '120<']
+df_filtered['vma_rang'] = pd.cut(df_filtered['vma'], bins=vma_bins, labels=labels_vma)
+
+# Plot relationship between "vma_rang" and gravity of accidents
+plt.figure(figsize=(10, 5))
+sns.countplot(x='vma_rang', hue='grav', data=df_filtered)
+plt.xlabel("Vitesse maximum autorisée (vma)")
+plt.ylabel("Nombre d'accidents")
+plt.legend(title='Gravité', loc='upper right', labels=['1_Indemne', '2_Tué', '3_Blessé_hospitalisé', '4_Blessé_léger'])
+plt.title("Relation entre la vitesse maximum autorisée (vma) et la gravité de l'accident")
+
+plt.show()
+#-----------------------------------
 
 
 # 'grav'en numeric
