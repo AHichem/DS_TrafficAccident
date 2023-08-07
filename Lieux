@@ -23,14 +23,47 @@ plt.legend(title='Regime de circulation (circ)', labels=circ_labels.values())
 plt.xticks(rotation=0)
 plt.show()
 #-----------------------------------
+#Figure 2
+#GRAVITY CATEGORY DE ROUTE NON STACKED
+#Enlever les -1 pour etre visuellement mieux pour analyse
+global_df = global_df[(global_df['circ'] != -1) & (global_df['grav'] != -1)]
+# Define a mapping for the gravity labels
+gravity_labels = {
+    1: 'Accident Matériel',
+    2: 'Accident Corporel Léger',
+    3: 'Accident Corporel Grave',
+    4: 'Accident Mortel (garder)'
+}
+# Replace the numeric values in 'grav' column with the corresponding labels
+global_df['grav'] = global_df['grav'].map(gravity_labels)
+# Define a mapping for the labels
+circ_labels = {
+    1: 'A sens unique',
+    2: 'Bidirectionnelle',
+    3: 'À chaussées séparées',
+    4: 'Avec voies d’affectation variable'
+}
+# Replace the numeric values in 'catr' column with the corresponding labels
+global_df['cir'] = global_df['circ'].map(circ_labels)
+# Create the countbox plot
+plt.figure(figsize=(10, 6))
+sns.countplot(data=global_df, x='circ', hue='grav', order=circ_labels.values())
+plt.xlabel('Category of Roads')
+plt.ylabel('Count of Accidents')
+plt.title('Accidents Severity by Category of Roads')
+plt.legend(title='Gravity of Accidents', labels=gravity_labels.values())
+plt.xticks(rotation=45, ha='right')
+plt.tight_layout()
+plt.show()
 
-#Figure 2.
+#---------------------------------
+#Figure 3.
 #REGIME DE CIRCULATION AVEC POINT DE CHOC 
 #CIRCULATION PLUS CHOC = PLUS DE BIDIRECTIONNEL AVANT CHOC 
 
 # Replace -1 with NaN to filter them out
-global_df['circ'].replace(-1, pd.NA, inplace=True)
-global_df['choc'].replace(-1, pd.NA, inplace=True)
+df['circ'].replace(-1, pd.NA, inplace=True)
+df['choc'].replace(-1, pd.NA, inplace=True)
 
 # Define labels for 'circulation de route' and 'point de choc'
 circ_labels = {
@@ -54,23 +87,12 @@ choc_labels = {
 }
 
 # Replace the numeric values in 'circulation de route' and 'point de choc' columns with the corresponding labels
-global_df['circ'] = global_df['circ'].map(circ_labels)
-global_df['choc'] = global_df['choc'].map(choc_labels)
-
-# Create a contingency table (cross-tabulation) to visualize the frequency distribution
-contingency_table = pd.crosstab(global_df['circ'], global_df['choc'], margins=True)
-
-# Heatmap
-plt.figure(figsize=(10, 6))
-sns.heatmap(contingency_table, annot=True, cmap='YlGnBu', fmt='d')
-plt.xlabel('Point de collision')
-plt.ylabel('Catégorie de routes')
-plt.title('Répartition des fréquences des points de collision et des catégories de routes')
-plt.show()
+df['circ'] = df['circ'].map(circ_labels)
+df['choc'] = df['choc'].map(choc_labels)
 
 # Stacked Bar Plot
 plt.figure(figsize=(10, 6))
-sns.countplot(data=global_df, x='circ', hue='choc')
+sns.countplot(data=df, x='circ', hue='choc')
 plt.xlabel('Catégorie de routes')
 plt.ylabel('Nombre d\'accidents')
 plt.title('Gravité des accidents par catégorie de routes et points de collision')
@@ -80,10 +102,10 @@ plt.tight_layout()
 plt.show()
 
 #-----------------------------------
-Figure 3
+Figure 3.
 # Replace -1 with NaN to filter them out
-global_df['circ'].replace(-1, pd.NA, inplace=True)
-global_df['choc'].replace(-1, pd.NA, inplace=True)
+df['circ'].replace(-1, pd.NA, inplace=True)
+df['choc'].replace(-1, pd.NA, inplace=True)
 
 # Define labels for 'circulation de route' and 'point de choc'
 circ_labels = {
@@ -107,18 +129,18 @@ choc_labels = {
 }
 
 # Replace the numeric values in 'circulation de route' and 'point de choc' columns with the corresponding labels
-global_df['circ'] = global_df['circ'].map(circ_labels)
-global_df['choc'] = global_df['choc'].map(choc_labels)
+df['circ'] = df['circ'].map(circ_labels)
+df['choc'] = df['choc'].map(choc_labels)
 
 # Create a contingency table (cross-tabulation) to visualize the frequency distribution
-contingency_table = pd.crosstab(global_df['circ'], global_df['choc'], margins=True)
+contingency_table = pd.crosstab(df['circ'], df['choc'], margins=True)
 
 # Stacked Bar Plot
 plt.figure(figsize=(10, 6))
-sns.countplot(data=global_df, x='circ', hue='point de choc')
-plt.xlabel('Category of Roads')
-plt.ylabel('Count of Accidents')
-plt.title('Accidents Severity by Category of Roads and Collision Points')
+sns.countplot(data=df, x='circ', hue='choc')
+plt.xlabel('Category de Route')
+plt.ylabel("Nombre d'Accidents")
+plt.title('Accidents par Category de Route et Point de Collision')
 plt.legend(title='Collision Point', loc='upper right', bbox_to_anchor=(1.25, 1))
 plt.xticks(rotation=45, ha='right')
 plt.tight_layout()
@@ -155,7 +177,7 @@ plt.title("Relation entre la vitesse maximum autorisée (vma) et la gravité de 
 plt.show()
 #-----------------------------------
 
-
+#AVANT CORRECTION
 # 'grav'en numeric
 gravity_labels = {
     0: 'Indemne',
@@ -166,39 +188,7 @@ gravity_labels = {
 global_df['grav'] = global_df['grav'].map(gravity_labels)
 
 #-----------------------------------
-#GRAVITY CATEGORY DE ROUTE NON STACKED
-#Enlever les -1 pour etre visuellement mieux pour analyse
-global_df = global_df[(global_df['circ'] != -1) & (global_df['grav'] != -1)]
-# Define a mapping for the gravity labels
-gravity_labels = {
-    1: 'Accident Matériel',
-    2: 'Accident Corporel Léger',
-    3: 'Accident Corporel Grave',
-    4: 'Accident Mortel (garder)'
-}
-# Replace the numeric values in 'grav' column with the corresponding labels
-global_df['grav'] = global_df['grav'].map(gravity_labels)
-# Define a mapping for the labels
-circ_labels = {
-    1: 'A sens unique',
-    2: 'Bidirectionnelle',
-    3: 'À chaussées séparées',
-    4: 'Avec voies d’affectation variable'
-}
-# Replace the numeric values in 'catr' column with the corresponding labels
-global_df['cir'] = global_df['circ'].map(circ_labels)
-# Create the countbox plot
-plt.figure(figsize=(10, 6))
-sns.countplot(data=global_df, x='circ', hue='grav', order=circ_labels.values())
-plt.xlabel('Category of Roads')
-plt.ylabel('Count of Accidents')
-plt.title('Accidents Severity by Category of Roads')
-plt.legend(title='Gravity of Accidents', labels=gravity_labels.values())
-plt.xticks(rotation=45, ha='right')
-plt.tight_layout()
-plt.show()
-
-#-----------------------------------
+--
 
 #-----------------------------------
 
