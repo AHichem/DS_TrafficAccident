@@ -49,8 +49,9 @@ y_pred = final_lr_model.predict(X_test_scaled)
 classification_rep = classification_report(y_test, y_pred)
 print("Classification Report:\n", classification_rep)
 
-# Initializes PCA pour 2 componentes
 
+
+# Initializes PCA pour 2 componentes
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.decomposition import PCA
@@ -58,7 +59,6 @@ from sklearn.decomposition import PCA
 pca = PCA(n_components=2)
 X_new = pca.fit_transform(X_train_scaled)
 principal_df = pd.DataFrame(data=X_new, columns=['PC1', 'PC2'])
-
 y_train_pred = lr.predict(X_train_scaled)
 principal_df['grav'] = y_train_pred
 
@@ -80,19 +80,16 @@ for i in range(X_train_scaled.shape[1]):
 
 
 
-#interpretability 
+#interpretability PCA
+
 import shap
-import pandas as pd
 
 final_lr_model = LogisticRegression(C=0.001, penalty='l2', max_iter=1000)
 final_lr_model.fit(X_train_scaled, y_train)
 explainer = shap.Explainer(final_lr_model, X_train_scaled)
-
 shap_values = explainer(X_test_scaled)
-
 shap.summary_plot(shap_values, X_test_scaled, feature_names=X.columns)
-
-i = 0  # Change to the desired instance index
+i = 0  
 shap.initjs()
 shap.force_plot(explainer.expected_value[1], shap_values[i], X_test_scaled[i], feature_names=X.columns)
 
