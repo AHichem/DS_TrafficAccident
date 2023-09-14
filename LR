@@ -1,0 +1,99 @@
+#Appel des librairies et du Dataframe
+
+import numpy as np
+import pandas as pd
+from sklearn.model_selection import train_test_split
+
+df=pd.read_csv('df_pre_processed.csv', low_memory=False)
+
+#on extrait le pire accidenté pour caractériser l'accident et on ne garde qu'une ligne par accident
+df['grav']=df['grav'].replace({1:0,2:3,3:2,4:1})
+df = df.sort_values(by='grav')
+df=df.drop_duplicates(subset='Num_Acc',keep='last')
+df = df.drop(columns=['num_veh'])
+X = df.drop(columns=['grav','date','Num_Acc']) 
+y = df['grav']
+y=y.replace({0:'0',1:'0',2:'1',3:'1'}).astype(int)
+X_train_save,X_test_save,y_train,y_test=train_test_split(X,y,test_size=0.2,random_state=42)
+print(df.head()) 
+
+#LOGISTIC REGRESSION 
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import GridSearchCV, cross_val_score
+from sklearn.metrics import classification_report, accuracy_score
+
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train_save)
+X_test_scaled = scaler.transform(X_test_save)
+lr = LogisticRegression(max_iter=1000)  
+lr.fit(X_train_scaled, y_train)
+# Define a hyperparameter grid to search over
+param_grid = {
+    'C': [0.001, 0.01, 0.1, 1, 10],  
+    'penalty': ['l1', 'l2'],  
+}
+
+# GridSearchCV
+grid_search = GridSearchCV(estimator=lr, param_grid=param_grid, cv=5)
+grid_search.fit(X_train_scaled, y_train)
+best_params = grid_search.best_params_
+print("Meilleurs Hyperparameters:", best_params)
+accuracy = grid_search.score(X_test_scaled, y_test)
+print(f"Accuracy on Test Data: {accuracy:.2f}")
+
+#Resultats
+final_lr_model = LogisticRegression(C=0.001, penalty='l2', max_iter=1000)
+final_lr_model.fit(X_train_scaled, y_train)
+y_pred = final_lr_model.predict(X_test_scaled)
+classification_rep = classification_report(y_test, y_pred)
+print("Classification Report:\n", classification_rep)
+
+# Initializes PCA pour 2 componentes
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.decomposition import PCA
+
+pca = PCA(n_components=2)
+X_new = pca.fit_transform(X_train_scaled)
+principal_df = pd.DataFrame(data=X_new, columns=['PC1', 'PC2'])
+
+y_train_pred = lr.predict(X_train_scaled)
+principal_df['grav'] = y_train_pred
+
+plt.figure(figsize=(13, 10))
+sns.scatterplot(data=principal_df, x='PC1', y='PC2', hue='grav', alpha=0.5)
+plt.xlabel('Principal Component 1')
+plt.ylabel('Principal Component 2')
+plt.title('PCA Visualization of Logistic Regression Predictions')
+plt.legend(title='Predicted')
+plt.show()
+
+##HICHEM CODE 
+coeff = pca.components_.transpose()
+sns.scatterplot(x='PC1', y='PC2', hue='grav', data=principal_df, alpha=0.5)
+for i in range(X_train_scaled.shape[1]):
+    plt.arrow(0, 0, coeff[i, 0]*1.5, coeff[i, 1]*1.5,
+              color='k', alpha=0.5, head_width=0.01, )
+    plt.text(coeff[i, 0]*1.5, coeff[i, 1] * 1.5, X_train_scaled, color='k')
+
+
+
+#interpretability 
+import shap
+import pandas as pd
+
+final_lr_model = LogisticRegression(C=0.001, penalty='l2', max_iter=1000)
+final_lr_model.fit(X_train_scaled, y_train)
+explainer = shap.Explainer(final_lr_model, X_train_scaled)
+
+shap_values = explainer(X_test_scaled)
+
+shap.summary_plot(shap_values, X_test_scaled, feature_names=X.columns)
+
+i = 0  # Change to the desired instance index
+shap.initjs()
+shap.force_plot(explainer.expected_value[1], shap_values[i], X_test_scaled[i], feature_names=X.columns)
+
+
