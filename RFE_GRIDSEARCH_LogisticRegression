@@ -1,4 +1,4 @@
-# Importation des bibliothèques et du DataFrame
+], "modele_rl_RFE.pkl")# Importation des bibliothèques et du DataFrame
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -90,4 +90,4 @@ print("Meilleurs Hyperparamètres:", meilleur_resultat['meilleurs_params'])
 print("Rapport de Classification:\n", meilleur_resultat['rapport_classification'])
 
 # Enregistrer le meilleur modèle avec Joblib
-joblib.dump(meilleur_resultat['modèl
+joblib.dump(meilleur_resultat['modèle'], "modele_rl_RFE.pkl")
