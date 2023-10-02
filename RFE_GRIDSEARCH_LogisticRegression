@@ -1,0 +1,111 @@
+
+
+#Appel des librairies et du Dataframe
+import numpy as np
+import pandas as pd
+from sklearn.model_selection import train_test_split
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import GridSearchCV, cross_val_score
+from sklearn.metrics import classification_report, accuracy_score
+from sklearn.feature_selection import RFE
+from sklearn.preprocessing import StandardScaler
+#from sklearn.metrics import roc_auc_score
+
+df=pd.read_csv('df_pre_processed.csv', low_memory=False)
+
+#on extrait le pire accidenté pour caractériser l'accident et on ne garde qu'une ligne par accident
+df['grav']=df['grav'].replace({1:0,2:3,3:2,4:1})
+
+#trier et conserver une ligne par accident
+df = df.sort_values(by='grav')
+df= df.drop_duplicates(subset='Num_Acc',keep='last')
+df = df.drop(columns=['num_veh'])
+
+#Histoire d'utiliser date meme si ca ne change pas grand chose :)
+df['date'] = pd.to_datetime(df.date)
+df['dayoftheyear']=df['date'].dt.dayofyear
+df=pd.concat([df, pd.get_dummies(df['date'].dt.day_name(), prefix='day')], axis=1)
+df['hour']=(df['date'].dt.hour + df['date'].dt.minute / 60.0).astype(float)
+
+#Definir X et y
+data = df.drop(columns=['grav','date','Num_Acc'])
+#separer y 'grav' column for binary classification source
+
+target = df['grav'].replace({0:'0', 1:'0', 2:'1', 3:'1'})
+
+# Split 80% train et 20% test
+X_train, X_test, y_train, y_test = train_test_split(data, target, test_size=0.3,stratify=target,random_state=723)
+
+#standardisation valeures numériques
+scaler = StandardScaler()
+X_train[['age','dayoftheyear','hour']] = scaler.fit_transform(X_train[['age','dayoftheyear','hour']])
+X_test[['age','dayoftheyear','hour']] = scaler.transform(X_test[['age','dayoftheyear','hour']])
+
+from imblearn.under_sampling import RandomUnderSampler
+#undersampling
+rus = RandomUnderSampler()
+X_ru, y_ru = rus.fit_resample(X_train, y_train)
+
+
+# Split your dataset into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(data, target, test_size=0.3, random_state=42)
+
+
+# Define the range of feature numbers to check
+feature_numbers = list(range(10, 90, 10))
+
+# Initialize a dictionary to store results
+results = {}
+
+# Loop through different feature numbers
+for num_features_to_select in feature_numbers:
+    # Create and fit the RFE model
+    estimator = LogisticRegression(max_iter=1000)
+    rfe = RFE(estimator, n_features_to_select=num_features_to_select)
+    X_train_selected = rfe.fit_transform(X_train, y_train)
+
+    # Perform hyperparameter tuning with cross-validation
+    param_grid = {
+        'C': [0.001, 0.01, 0.1, 1, 10],
+        'penalty': ['l2', 'l1', 'elasticnet'],
+        'solver': ['liblinear', 'lbfgs', 'sag', 'saga']
+    }
+    grid_search = GridSearchCV(LogisticRegression(max_iter=1000), param_grid, cv=5, scoring='accuracy')
+    grid_search.fit(X_train_selected, y_train)
+    best_params = grid_search.best_params_
+
+    # Create and train the final model with the best hyperparameters
+    final_lr_model = LogisticRegression(max_iter=1000, **best_params)
+    final_lr_model.fit(X_train_selected, y_train)
+
+    # Transform test data
+    X_test_selected = rfe.transform(X_test)
+
+    # Make predictions and calculate metrics
+    y_pred = final_lr_model.predict(X_test_selected)
+    classification_rep = classification_report(y_test, y_pred)
+
+    #y_prob = final_lr_model.predict_proba(X_test_selected)[:, 1]
+    #roc_auc = roc_auc_score(y_test, y_prob)
+
+    # Store results in the dictionary
+    results[num_features_to_select] = {
+        'best_params': best_params,
+        'classification_report': classification_rep,
+        'model': final_lr_model
+    }
+
+# Find the feature number that resulted in the highest ROC AUC score
+best_feature_number = max(results, key=lambda x: results[x]['model'].score(X_test_selected, y_test))
+best_result = results[best_feature_number]
+
+# Print the results for the best feature number
+print(f"Best Feature Number: {best_feature_number}")
+print("Best Hyperparameters:", best_result['best_params'])
+print("Classification Report:\n", best_result['classification_report'])
+
+import joblib 
+# Sauvegarder le modèle avec Joblib
+joblib.dump(final_lr_model, "RFE_lr_model.pkl")
